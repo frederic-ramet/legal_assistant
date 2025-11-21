@@ -1,54 +1,78 @@
-# Configuration spécifique pour les NDA
+name: nda
+description: Accord de confidentialité FR Digital
+version: 1.0
 
-# Variables standard
-variables:
-  - name: "company_name"
-    required: true
-    description: "Nom de l'entreprise signataire"
-  - name: "company_siren"
-    required: true
-    description: "Numéro SIREN"
-  - name: "company_address"
-    required: true
-    description: "Adresse du siège social"
-  - name: "representative_name"
-    required: true
-    description: "Nom du représentant légal"
-  - name: "representative_title"
-    required: true
-    description: "Fonction du représentant"
+# Partie 1 fixe (FR Digital)
+partie_fixe:
+  raison_sociale: "FR DIGITAL"
+  forme_juridique: "société par actions simplifiée unipersonnelle"
+  adresse: "Sartrouville (France)"
+  capital: "5 000 €"
+  ville_rcs: "Versailles"
+  siren: "901 995 308"
+  representant_nom: "Frédéric Ramet"
+  representant_fonction: "Président"
 
-# Options de clauses
-clauses:
-  - id: "confidentiality_period"
-    name: "Durée de confidentialité"
-    options:
-      - "2 ans"
-      - "3 ans"
-      - "5 ans"
-    default: "3 ans"
+# Variantes disponibles
+variants:
+  master:
+    template: NDA_Master.docx
+    description: Conseil IA générique
+    format_partie2: detailed  # avec forme juridique, capital
+    has_numbered_definitions: false
+    defaults:
+      clause_non_sollicitation: false
+      objet_projet: "projet de prestations de conseil en intelligence artificielle générative"
 
-  - id: "scope"
-    name: "Portée de l'accord"
-    options:
-      - "unilatéral"
-      - "bilatéral"
-    default: "bilatéral"
+  dev_plateforme:
+    template: NDA_DevPlateforme.docx
+    description: Développement plateforme ForgeAI
+    format_partie2: simple
+    has_numbered_definitions: true
+    defaults:
+      clause_non_sollicitation: true
+      duree_non_sollicitation: 12
+      objet_projet: |
+        création et de la mise à jour de la plateforme de développement
+        en intelligence artificielle générative dénommée ForgeAI (ci-après,
+        le « Projet »), incluant la conception, le développement, l'amélioration,
+        le déploiement et la maintenance de la plateforme ainsi que des outils
+        et méthodes associés
 
-  - id: "jurisdiction"
-    name: "Juridiction compétente"
-    default: "Tribunaux de Paris"
+  prestations:
+    template: NDA_Prestations.docx
+    description: Missions clients FR Digital
+    format_partie2: simple
+    has_numbered_definitions: true
+    defaults:
+      clause_non_sollicitation: true
+      duree_non_sollicitation: 12
+      objet_projet: |
+        missions de prestations de services pour les clients de FR DIGITAL,
+        nous utilisons la plateforme de développement en intelligence artificielle
+        générative dénommée ForgeAI (ci-après, le « Projet »), incluant la conception,
+        le développement, l'amélioration, le déploiement et la maintenance de la
+        plateforme ainsi que des outils et méthodes associés
 
-# Templates disponibles
-templates:
-  - name: "master"
-    file: "NDA_Master.docx"
-    description: "Template NDA standard"
+# Defaults globaux
+defaults:
+  duree_confidentialite: 4  # années
+  lieu_signature: "Sartrouville"
+  juridiction: "Paris"
 
-  - name: "dev_plateforme"
-    file: "NDA_DevPlateforme.docx"
-    description: "NDA pour développement de plateforme"
+# Validation
+validation:
+  min_parties: 2
+  max_parties: 2  # NDA bilatéral pour l'instant
 
-  - name: "prestations"
-    file: "NDA_Prestations.docx"
-    description: "NDA pour prestations de service"
+# Placeholders dans les templates DOCX
+placeholders:
+  # Partie 2
+  - "XXXXXXX"      # raison sociale
+  - "XXXXX"        # valeurs diverses
+  - "XXX"          # ville RCS courte
+
+# Output
+output:
+  naming: "NDA_{{TYPE}}_FRDigital_{{P2_RAISON_SOCIALE}}_{{DATE}}.docx"
+  date_format: "%d-%m-%Y"
