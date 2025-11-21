@@ -22,6 +22,32 @@ python -m src.cli nda \
 | Prestation | 🔜 | Contrat de prestation de services |
 | CGV SaaS | 🔜 | Conditions générales de vente |
 
+## Structure du Projet
+
+```
+contract-generator/
+├── README.md                    # Quick start utilisateur
+├── INSTRUCTIONS.md              # Guide architecture pour agent
+├── requirements.txt             # Dépendances Python
+├── config/
+│   └── settings.yaml            # Configuration globale (Pappers API, etc.)
+├── templates/
+│   └── nda/
+│       ├── README.md            # Doc usage NDA (CLI, variables)
+│       ├── INSTRUCTIONS.md      # Instructions spécifiques agent NDA
+│       ├── config.yaml          # Configuration variantes NDA
+│       └── examples/
+│           ├── NDA_Master.docx
+│           ├── NDA_DevPlateforme.docx
+│           └── NDA_Prestations.docx
+├── src/
+│   ├── models.py                # Modèles de données (Société, etc.)
+│   ├── scraper.py               # Scraping Pappers
+│   ├── generator.py             # Génération DOCX
+│   └── cli.py                   # Interface ligne de commande
+└── output/                      # Contrats générés
+```
+
 ## Architecture
 
 1. **Input** : URL Pappers ou SIREN
