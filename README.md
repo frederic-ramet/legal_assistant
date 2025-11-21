@@ -9,12 +9,29 @@ Le système récupère automatiquement les informations d'entreprises via :
 1. **Données de test** (FR Digital, Nexans) - Aucune configuration requise
 2. **API SIRENE (INSEE)** - Données officielles du gouvernement français
    - Gratuit avec inscription : https://portail-api.insee.fr/
-   - TODO: Ajouter la clé API dans `config/settings.yaml`
+   - Configurable via le menu interactif (option 4) ou manuellement dans `config/settings.yaml`
 3. **Saisie manuelle** - Fallback si aucune source automatique disponible
 
 **SIRENs de test disponibles :**
 - FR Digital : `901995308`
 - Nexans : `393525852`
+
+### Configuration de la clé API SIRENE
+
+**Option 1 : Via le menu interactif (recommandé)**
+```bash
+./run.sh
+# Choisir l'option 4 : "Configurer la clé API SIRENE"
+```
+
+**Option 2 : Configuration manuelle**
+```bash
+# Copier le fichier template
+cp config/settings.yaml.example config/settings.yaml
+
+# Éditer et ajouter votre clé
+nano config/settings.yaml
+```
 
 ## Quick Start
 
@@ -24,11 +41,12 @@ Le système récupère automatiquement les informations d'entreprises via :
 ./run.sh
 ```
 
-Le script interactif vous guide à travers :
-- Vérification et installation des dépendances
-- Sélection du type de NDA
-- Saisie des informations de la société
-- Génération automatique du contrat
+Le script interactif propose :
+1. **Générer un NDA** - Création d'accords de confidentialité
+2. **Afficher l'aide** - Documentation et exemples d'utilisation
+3. **Tester l'API SIRENE** - Vérifier la connexion à l'API INSEE
+4. **Configurer la clé API** - Saisie interactive de votre clé API SIRENE
+5. **Quitter**
 
 ### Mode Ligne de Commande
 ```bash
