@@ -93,7 +93,7 @@ show_main_menu() {
     echo ""
     echo "  1) Générer un NDA (Accord de confidentialité)"
     echo "  2) Afficher l'aide"
-    echo "  3) Tester le scraper Pappers"
+    echo "  3) Tester l'API SIRENE (requiert clé API)"
     echo "  4) Quitter"
     echo ""
     read -p "Votre choix (1-4): " choice
@@ -233,10 +233,11 @@ show_help() {
 # Tester le scraper
 test_scraper() {
     clear
-    print_header "TEST DU SCRAPER PAPPERS"
+    print_header "TEST DE L'API SIRENE"
 
     echo ""
-    print_info "Test du scraper sur FR Digital et Nexans..."
+    print_info "Test de l'API SIRENE avec un SIREN réel (Google France)..."
+    print_warning "Note: Requiert une clé API gratuite de https://portail-api.insee.fr/"
     echo ""
 
     python3 -m src.scraper
