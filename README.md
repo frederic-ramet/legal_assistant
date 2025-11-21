@@ -3,15 +3,31 @@
 Générateur automatisé de contrats juridiques à partir d'informations sociétés (Pappers).
 
 ## Quick Start
+
+### Mode Interactif (Recommandé)
+```bash
+# Lancer le script interactif
+./run.sh
+```
+
+Le script interactif vous guide à travers :
+- Vérification et installation des dépendances
+- Sélection du type de NDA
+- Saisie des informations de la société
+- Génération automatique du contrat
+
+### Mode Ligne de Commande
 ```bash
 # Installation
 pip install -r requirements.txt
 
 # Générer un NDA
 python -m src.cli nda \
-  --party "https://www.pappers.fr/entreprise/fr-digital-901995308" \
   --party "https://www.pappers.fr/entreprise/nexans-393525852" \
   --type master
+
+# Avec SIREN directement
+python -m src.cli nda --party "393525852" --type dev_plateforme
 ```
 
 ## Templates Disponibles
