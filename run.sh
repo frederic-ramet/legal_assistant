@@ -59,7 +59,7 @@ check_dependencies() {
     echo ""
     print_info "Vérification des packages Python..."
 
-    if python3 -c "import requests, bs4, docx, yaml" 2>/dev/null; then
+    if python3 -c "import requests, docx, yaml" 2>/dev/null; then
         print_success "Tous les packages Python sont installés"
     else
         print_warning "Certains packages manquent"

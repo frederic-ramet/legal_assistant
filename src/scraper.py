@@ -1,15 +1,39 @@
-# Module pour scraper les informations d'entreprise via Pappers
+# Module pour récupérer les informations d'entreprise via API SIRENE (INSEE)
 
 import re
 import requests
-from bs4 import BeautifulSoup
 from typing import Optional
 from .models import Societe
 
 
-def saisie_manuelle(siren: str) -> Societe:
-    """Données hardcodées pour les tests (fallback si Pappers bloque)."""
-    # Données de test pour FR Digital et Nexans
+def format_capital(capital_value: float) -> str:
+    """Formate le capital avec espaces milliers et €."""
+    if capital_value == 0:
+        return "0 €"
+
+    capital_str = f"{int(capital_value):,}".replace(',', ' ')
+    return f"{capital_str} €"
+
+
+def format_siren(siren: str) -> str:
+    """Formate le SIREN avec espaces (XXX XXX XXX)."""
+    siren = siren.replace(' ', '')
+    if len(siren) == 9:
+        return f"{siren[0:3]} {siren[3:6]} {siren[6:9]}"
+    return siren
+
+
+def extract_siren_from_url(url: str) -> Optional[str]:
+    """Extrait le SIREN d'une URL Pappers."""
+    # Format: https://www.pappers.fr/entreprise/nom-entreprise-123456789
+    match = re.search(r'-(\d{9})$', url)
+    if match:
+        return match.group(1)
+    return None
+
+
+def get_test_data(siren: str) -> Optional[Societe]:
+    """Données de test pour FR Digital et Nexans."""
     test_data = {
         "901995308": Societe(
             siren="901 995 308",
@@ -34,81 +58,136 @@ def saisie_manuelle(siren: str) -> Societe:
     }
 
     siren_clean = siren.replace(' ', '')
-    if siren_clean in test_data:
-        print(f"ℹ️  Utilisation des données de test pour SIREN {siren}")
-        return test_data[siren_clean]
-
-    # Sinon, demander saisie manuelle
-    print(f"\n⌨️  Saisie manuelle pour SIREN {siren}")
-    return Societe(
-        siren=format_siren(siren),
-        raison_sociale=input("Raison sociale: "),
-        forme_juridique=input("Forme juridique: "),
-        capital=input("Capital (ex: 5 000 €): "),
-        adresse=input("Adresse (ville): ") + " (France)",
-        ville_rcs=input("Ville RCS: "),
-        representant_nom=input("Nom représentant: "),
-        representant_fonction=input("Fonction représentant: ")
-    )
+    return test_data.get(siren_clean)
 
 
-def extract_siren_from_url(url: str) -> Optional[str]:
-    """Extrait le SIREN d'une URL Pappers."""
-    # Format: https://www.pappers.fr/entreprise/nom-entreprise-123456789
-    match = re.search(r'-(\d{9})$', url)
-    if match:
-        return match.group(1)
-    return None
+def fetch_from_sirene_api(siren: str) -> Optional[Societe]:
+    """
+    Récupère les données d'une société depuis l'API SIRENE (INSEE).
 
+    Note: L'API SIRENE requiert une clé API gratuite.
+    Pour l'obtenir: https://api.insee.fr/catalogue/
 
-def format_capital(capital_str: str) -> str:
-    """Formate le capital avec espaces milliers et €."""
-    # Extraire le nombre
-    numbers = re.findall(r'\d+', capital_str.replace(' ', ''))
-    if not numbers:
-        return capital_str
+    API Documentation: https://api.insee.fr/catalogue/site/themes/wso2/subthemes/insee/pages/item-info.jag?name=Sirene&version=V3&provider=insee
+    """
+    # Vérifier si une clé API est configurée (future implémentation)
+    api_key = None  # TODO: Charger depuis config/settings.yaml
 
-    capital_num = ''.join(numbers)
+    url = f"https://api.insee.fr/entreprises/sirene/V3/siren/{siren}"
 
-    # Ajouter espaces milliers
-    if len(capital_num) > 3:
-        formatted = ''
-        for i, digit in enumerate(reversed(capital_num)):
-            if i > 0 and i % 3 == 0:
-                formatted = ' ' + formatted
-            formatted = digit + formatted
-        return f"{formatted} €"
+    headers = {
+        'Accept': 'application/json',
+        'User-Agent': 'Contract-Generator/1.0'
+    }
 
-    return f"{capital_num} €"
+    if api_key:
+        headers['Authorization'] = f'Bearer {api_key}'
 
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
 
-def format_siren(siren: str) -> str:
-    """Formate le SIREN avec espaces (XXX XXX XXX)."""
-    siren = siren.replace(' ', '')
-    if len(siren) == 9:
-        return f"{siren[0:3]} {siren[3:6]} {siren[6:9]}"
-    return siren
+        if response.status_code == 200:
+            data = response.json()
+
+            # L'API SIRENE retourne une structure complexe
+            unite_legale = data.get('uniteLegale', {})
+            periode = unite_legale.get('periodesUniteLegale', [{}])[0]
+
+            # Extraire les données
+            raison_sociale = (
+                periode.get('denominationUniteLegale', '') or
+                periode.get('denominationUsuelle1UniteLegale', '') or
+                ''
+            )
+
+            forme_juridique = periode.get('categorieJuridiqueUniteLegale', '')
+
+            # Mapping des codes de forme juridique vers des noms complets
+            formes_juridiques = {
+                '5499': 'Société par actions simplifiée',
+                '5710': 'Société par actions simplifiée unipersonnelle',
+                '5599': 'Société à responsabilité limitée',
+                '5498': 'Société anonyme',
+            }
+            forme_juridique_nom = formes_juridiques.get(forme_juridique, f"Code {forme_juridique}")
+
+            # Capital social
+            capital_raw = periode.get('capitalVariable', '') or periode.get('montantCapitalUniteLegale')
+            capital = format_capital(float(capital_raw)) if capital_raw else "Non renseigné"
+
+            # Adresse du siège
+            adresse_siege = unite_legale.get('adresseEtablissement', {})
+            commune = adresse_siege.get('libelleCommuneEtablissement', '')
+            adresse = f"{commune} (France)" if commune else "Non renseigné"
+
+            # RCS (tribunal)
+            ville_rcs = commune  # Approximation, l'API ne donne pas directement le greffe
+
+            siren_formatted = format_siren(siren)
+
+            print(f"✅ Données récupérées depuis l'API SIRENE:")
+            print(f"   Raison sociale: {raison_sociale}")
+            print(f"   Forme juridique: {forme_juridique_nom}")
+            print(f"   Capital: {capital}")
+            print(f"   Adresse: {adresse}")
+            print(f"   SIREN: {siren_formatted}")
+
+            return Societe(
+                siren=siren_formatted,
+                raison_sociale=raison_sociale,
+                forme_juridique=forme_juridique_nom,
+                capital=capital,
+                adresse=adresse,
+                ville_rcs=ville_rcs,
+                representant_nom="Non disponible (API SIRENE)",
+                representant_fonction="Non disponible"
+            )
+
+        elif response.status_code == 403:
+            print(f"⚠️  API SIRENE requiert une clé API (gratuite)")
+            print(f"   Pour l'obtenir: https://api.insee.fr/catalogue/")
+            return None
+
+        elif response.status_code == 404:
+            print(f"⚠️  SIREN {siren} non trouvé dans la base SIRENE")
+            return None
+
+        elif response.status_code == 429:
+            print(f"⚠️  Rate limit atteint sur l'API SIRENE")
+            return None
+
+        else:
+            print(f"⚠️  Erreur API SIRENE: {response.status_code}")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️  Erreur de connexion à l'API SIRENE: {e}")
+        return None
+    except (KeyError, ValueError, TypeError) as e:
+        print(f"⚠️  Erreur de parsing des données SIRENE: {e}")
+        return None
 
 
 def scrape_pappers(identifier: str) -> Societe:
     """
-    Scrape les informations d'une société depuis Pappers.
+    Récupère les informations d'une société.
+
+    Sources (dans l'ordre) :
+    1. Données de test (FR Digital, Nexans)
+    2. API SIRENE de l'INSEE (gratuite)
+    3. Saisie manuelle
 
     Args:
         identifier: URL Pappers ou SIREN
 
     Returns:
-        Objet Societe avec les données extraites
-
-    Note: Le scraping de Pappers est souvent bloqué. Ce système utilise
-    des données de test hardcodées pour FR Digital et Nexans.
+        Objet Societe avec les données
     """
-    # Déterminer si c'est une URL ou un SIREN
+    # Extraire le SIREN
     if identifier.startswith('http'):
-        url = identifier
-        siren = extract_siren_from_url(url)
+        siren = extract_siren_from_url(identifier)
         if not siren:
-            raise ValueError(f"Impossible d'extraire le SIREN de l'URL: {url}")
+            raise ValueError(f"Impossible d'extraire le SIREN de l'URL: {identifier}")
     else:
         siren = identifier.replace(' ', '')
         if len(siren) != 9:
@@ -116,8 +195,42 @@ def scrape_pappers(identifier: str) -> Societe:
 
     print(f"📥 Récupération des données pour SIREN {siren}...")
 
-    # Utiliser directement les données de test (Pappers bloque souvent le scraping)
-    return saisie_manuelle(siren)
+    # 1. Vérifier si c'est une donnée de test
+    test_societe = get_test_data(siren)
+    if test_societe:
+        print(f"ℹ️  Utilisation des données de test")
+        return test_societe
+
+    # 2. Essayer l'API SIRENE
+    print(f"🔍 Recherche dans l'API SIRENE (INSEE)...")
+    sirene_societe = fetch_from_sirene_api(siren)
+    if sirene_societe:
+        return sirene_societe
+
+    # 3. Fallback : erreur ou saisie manuelle
+    print(f"\n❌ Impossible de récupérer les données automatiquement.")
+    print(f"   Solutions:")
+    print(f"   1. Utiliser un SIREN de test (901995308 ou 393525852)")
+    print(f"   2. Obtenir une clé API SIRENE gratuite: https://api.insee.fr/catalogue/")
+    print(f"   3. Saisir les données manuellement (si terminal interactif)")
+
+    import sys
+    if sys.stdin.isatty():
+        # Terminal interactif, on peut demander la saisie
+        print(f"\n⌨️  Saisie manuelle:")
+        return Societe(
+            siren=format_siren(siren),
+            raison_sociale=input("Raison sociale: "),
+            forme_juridique=input("Forme juridique: "),
+            capital=input("Capital (ex: 5 000 €): "),
+            adresse=input("Adresse (ville): ") + " (France)",
+            ville_rcs=input("Ville RCS: "),
+            representant_nom=input("Nom représentant: "),
+            representant_fonction=input("Fonction représentant: ")
+        )
+    else:
+        # Pas de terminal interactif, lever une erreur
+        raise ValueError(f"Aucune source de données disponible pour le SIREN {siren}")
 
 
 if __name__ == "__main__":
