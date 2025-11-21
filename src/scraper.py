@@ -63,25 +63,33 @@ def get_test_data(siren: str) -> Optional[Societe]:
 
 def fetch_from_sirene_api(siren: str) -> Optional[Societe]:
     """
-    Récupère les données d'une société depuis l'API SIRENE (INSEE).
+    Récupère les données d'une société depuis l'API SIRENE v3.11 (INSEE).
 
     Note: L'API SIRENE requiert une clé API gratuite.
-    Pour l'obtenir: https://portail-api.insee.fr/
 
-    API Documentation: https://portail-api.insee.fr/
+    Pour obtenir une clé API:
+    1. Se connecter sur https://portail-api.insee.fr/
+    2. Créer une application (mode "simple")
+    3. Souscrire au plan "Public" de l'API Sirene
+    4. Récupérer la clé API (X-INSEE-Api-Key-Integration)
+
+    Documentation: https://portail-api.insee.fr/ > API Sirene > Documentation
+    État du service: https://www.sirene.fr/sirene/public/accueil
     """
     # Vérifier si une clé API est configurée (future implémentation)
     api_key = None  # TODO: Charger depuis config/settings.yaml
 
-    url = f"https://api.insee.fr/entreprises/sirene/V3/siren/{siren}"
+    # URL correcte de l'API SIRENE v3.11
+    url = f"https://api.insee.fr/api-sirene/3.11/siren/{siren}"
 
     headers = {
         'Accept': 'application/json',
         'User-Agent': 'Contract-Generator/1.0'
     }
 
+    # La clé API se transmet dans le header X-INSEE-Api-Key-Integration
     if api_key:
-        headers['Authorization'] = f'Bearer {api_key}'
+        headers['X-INSEE-Api-Key-Integration'] = api_key
 
     try:
         response = requests.get(url, headers=headers, timeout=10)
