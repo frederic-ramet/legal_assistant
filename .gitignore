@@ -33,7 +33,7 @@ ENV/
 *~
 
 # Output
-output/*.docx
+#output/*.docx
 
 # Configuration (contient la clé API)
 config/settings.yaml
@@ -43,4 +43,4 @@ config/settings.yaml
 Thumbs.db
 
 # Templates DOCX (à ajouter manuellement)
-templates/*/examples/*.docx
+#templates/*/examples/*.docx
