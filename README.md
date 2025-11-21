@@ -1,6 +1,20 @@
 # Contract Generator
 
-Générateur automatisé de contrats juridiques à partir d'informations sociétés (Pappers).
+Générateur automatisé de contrats juridiques à partir d'informations sociétés.
+
+## Sources de Données
+
+Le système récupère automatiquement les informations d'entreprises via :
+
+1. **Données de test** (FR Digital, Nexans) - Aucune configuration requise
+2. **API SIRENE (INSEE)** - Données officielles du gouvernement français
+   - Gratuit avec inscription : https://api.insee.fr/catalogue/
+   - TODO: Ajouter la clé API dans `config/settings.yaml`
+3. **Saisie manuelle** - Fallback si aucune source automatique disponible
+
+**SIRENs de test disponibles :**
+- FR Digital : `901995308`
+- Nexans : `393525852`
 
 ## Quick Start
 
@@ -58,7 +72,7 @@ contract-generator/
 │           └── NDA_Prestations.docx
 ├── src/
 │   ├── models.py                # Modèles de données (Société, etc.)
-│   ├── scraper.py               # Scraping Pappers
+│   ├── scraper.py               # Récupération données via API SIRENE
 │   ├── generator.py             # Génération DOCX
 │   └── cli.py                   # Interface ligne de commande
 └── output/                      # Contrats générés
@@ -66,10 +80,10 @@ contract-generator/
 
 ## Architecture
 
-1. **Input** : URL Pappers ou SIREN
-2. **Scraper** : Extraction données société
-3. **Generator** : Application template + variables
-4. **Output** : DOCX téléchargeable
+1. **Input** : SIREN ou URL Pappers
+2. **Data Retrieval** : API SIRENE (INSEE) ou données de test
+3. **Generator** : Application template DOCX + variables
+4. **Output** : Contrat DOCX prêt à signer
 
 ## Ajouter un nouveau template
 
