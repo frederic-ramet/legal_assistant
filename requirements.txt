@@ -1,7 +1,6 @@
 # Dépendances Python
 
-# Web scraping
-beautifulsoup4==4.12.2
+# API calls
 requests==2.31.0
 
 # DOCX manipulation
