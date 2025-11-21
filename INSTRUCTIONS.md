@@ -1,77 +1,130 @@
 # Instructions Agent - Contract Generator
 
-## Contexte
+## Vue d'ensemble
 
-Générateur de contrats juridiques FR. Scraping Pappers + templating DOCX.
+Générateur de contrats juridiques FR.
+- **Input** : URL Pappers ou SIREN
+- **Process** : Scraping + templating DOCX
+- **Output** : Contrat prêt à signer
 
-## Principes Architecture
+---
 
-### 1. Modularité
+## Architecture Générale
 
-Chaque type de contrat = 1 dossier dans `templates/`
+### 1. Scraper (`src/scraper.py`)
+
+Extraction données société depuis Pappers.
+
+**Input** : URL ou SIREN
 ```
-templates/[type]/
-├── README.md      # Doc usage
-├── config.yaml    # Variables, options, clauses
-└── examples/      # Fichiers DOCX source
+https://www.pappers.fr/entreprise/fr-digital-901995308
+ou
+901995308
 ```
 
-### 2. Données Société
+**Output** : Dataclass `Societe`
 
-Dataclass commune pour toutes les sociétés :
+**Méthode** : Scraping HTML (BeautifulSoup), pas d'API payante.
+
+**Fallback** : Si échec extraction, permettre saisie manuelle.
+
+### 2. Models (`src/models.py`)
+
+Dataclass commune tous templates :
 ```python
 @dataclass
 class Societe:
     siren: str
     raison_sociale: str
-    forme_juridique: str      # SAS, SARL, etc.
-    capital: str              # "5 000 €"
+    forme_juridique: str
+    capital: str              # Formaté : "5 000 €"
     adresse: str
-    ville_rcs: str            # Versailles, Paris, etc.
+    ville_rcs: str
     representant_nom: str
-    representant_fonction: str  # Président, Gérant, etc.
+    representant_fonction: str
 ```
 
-### 3. Scraper Pappers
+### 3. Generator (`src/generator.py`)
 
-- Input : URL ou SIREN
-- Parser HTML (BeautifulSoup)
-- Fallback : saisie manuelle si échec
-- Cache local JSON optionnel
+Moteur de templating générique.
 
-### 4. Moteur Templating
+**Responsabilités** :
+- Charger config template (`config.yaml`)
+- Appliquer variables au DOCX
+- Gérer clauses conditionnelles
+- Produire output
 
-- Utiliser `python-docx` ou `docxtpl`
-- Placeholders format `{{variable}}`
-- Gestion clauses conditionnelles via config
+**Libs recommandées** : `python-docx` ou `docxtpl`
 
-### 5. CLI
+### 4. CLI (`src/cli.py`)
+
+Interface ligne de commande.
 ```bash
 python -m src.cli [template] [options]
 ```
 
-Chaque template définit ses propres arguments dans son `config.yaml`.
+Chaque template définit ses options dans son `config.yaml`.
 
-## Workflow Développement
+---
 
-1. Lire le README du template ciblé
-2. Analyser les exemples DOCX fournis
-3. Identifier variables et clauses conditionnelles
-4. Implémenter scraper si nouveau champ requis
-5. Créer template avec placeholders
-6. Tester sur sociétés variées
+## Organisation Templates
+
+Chaque template = 1 dossier dans `templates/` :
+```
+templates/[nom]/
+├── README.md           # Doc utilisateur (usage, CLI)
+├── INSTRUCTIONS.md     # Instructions agent (implémentation)
+├── config.yaml         # Variables, variantes, defaults
+└── examples/           # Fichiers DOCX source
+```
+
+**Important** : Lire le `INSTRUCTIONS.md` du template avant d'implémenter.
+
+---
 
 ## Conventions
 
-- Nommage output : `[TYPE]_[Société1]_[Société2]_[Date].docx`
-- Dates format FR : `JJ/MM/AAAA`
+### Nommage Output
+```
+[TYPE]_[Variante]_[Partie1]_[Partie2]_[Date].docx
+```
+Exemple : `NDA_master_FRDigital_Nexans_21-11-2025.docx`
+
+### Formatage FR
+- Dates : `JJ/MM/AAAA`
 - Montants : `X XXX €` (espace milliers)
-- Logs clairs pour debug
+- SIREN : `XXX XXX XXX`
 
-## Extension Future
+### Logs
+Afficher clairement :
+- Données extraites de Pappers
+- Variables appliquées
+- Fichier généré
 
-Pour ajouter un template :
+---
+
+## Workflow Développement
+
+1. **Lire** `templates/[nom]/INSTRUCTIONS.md`
+2. **Analyser** les exemples DOCX
+3. **Implémenter** scraper si nouveaux champs requis
+4. **Créer** logique de remplacement spécifique
+5. **Tester** sur sociétés variées
+
+---
+
+## Extension
+
+Pour ajouter un nouveau template :
+
 1. Créer structure dossier
-2. Documenter variables dans config.yaml
-3. Ajouter exemples annotés
-4. Le générateur détecte automatiquement les nouveaux templates
+2. Analyser les DOCX source, documenter les placeholders
+3. Écrire `config.yaml` avec variables
+4. Écrire `INSTRUCTIONS.md` avec détails implémentation
+5. Le generator détecte automatiquement via config
+
+---
+
+## Priorité Actuelle
+
+**Template NDA** : Voir `templates/nda/INSTRUCTIONS.md` pour les détails d'implémentation spécifiques (formats bloc partie 2, gestion article 6, placeholders DOCX).
