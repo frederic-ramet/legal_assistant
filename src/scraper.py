@@ -242,14 +242,37 @@ def scrape_pappers(identifier: str) -> Societe:
 
 
 if __name__ == "__main__":
-    # Test
-    print("Test scraper Pappers\n")
+    # Test de l'API SIRENE avec un SIREN réel
+    print("Test de l'API SIRENE (INSEE)\n")
+    print("Ce test va appeler l'API SIRENE pour récupérer des données réelles.")
+    print("Note: Une clé API gratuite est requise pour fonctionner.\n")
 
-    # Test FR Digital
+    # Test avec un SIREN qui n'est pas dans les données de test
+    # Utilisons le SIREN de Google France par exemple: 443061841
     print("=" * 60)
-    societe1 = scrape_pappers("https://www.pappers.fr/entreprise/fr-digital-901995308")
+    print("Test API SIRENE: Google France (SIREN 443061841)")
+    print("=" * 60)
+
+    test_siren = "443061841"
+    print(f"🔍 Recherche dans l'API SIRENE (INSEE)...")
+
+    societe = fetch_from_sirene_api(test_siren)
+
+    if societe:
+        print(f"\n✅ Données récupérées avec succès:")
+        print(f"   SIREN: {societe.siren}")
+        print(f"   Raison sociale: {societe.raison_sociale}")
+        print(f"   Forme juridique: {societe.forme_juridique}")
+        print(f"   Capital: {societe.capital}")
+        print(f"   Adresse: {societe.adresse}")
+        print(f"   Ville RCS: {societe.ville_rcs}")
+        print(f"   Représentant: {societe.representant_nom} ({societe.representant_fonction})")
+    else:
+        print(f"\n❌ L'API n'a pas retourné de données.")
+        print(f"\nPour obtenir une clé API gratuite:")
+        print(f"   1. Aller sur https://portail-api.insee.fr/")
+        print(f"   2. Créer un compte et une application")
+        print(f"   3. Souscrire au plan 'Public' de l'API Sirene")
+        print(f"   4. Ajouter la clé dans config/settings.yaml")
+
     print()
-
-    # Test Nexans
-    print("=" * 60)
-    societe2 = scrape_pappers("https://www.pappers.fr/entreprise/nexans-393525852")
