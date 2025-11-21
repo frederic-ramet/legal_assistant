@@ -8,7 +8,7 @@ Le système récupère automatiquement les informations d'entreprises via :
 
 1. **Données de test** (FR Digital, Nexans) - Aucune configuration requise
 2. **API SIRENE (INSEE)** - Données officielles du gouvernement français
-   - Gratuit avec inscription : https://api.insee.fr/catalogue/
+   - Gratuit avec inscription : https://portail-api.insee.fr/
    - TODO: Ajouter la clé API dans `config/settings.yaml`
 3. **Saisie manuelle** - Fallback si aucune source automatique disponible
 

@@ -66,9 +66,9 @@ def fetch_from_sirene_api(siren: str) -> Optional[Societe]:
     Récupère les données d'une société depuis l'API SIRENE (INSEE).
 
     Note: L'API SIRENE requiert une clé API gratuite.
-    Pour l'obtenir: https://api.insee.fr/catalogue/
+    Pour l'obtenir: https://portail-api.insee.fr/
 
-    API Documentation: https://api.insee.fr/catalogue/site/themes/wso2/subthemes/insee/pages/item-info.jag?name=Sirene&version=V3&provider=insee
+    API Documentation: https://portail-api.insee.fr/
     """
     # Vérifier si une clé API est configurée (future implémentation)
     api_key = None  # TODO: Charger depuis config/settings.yaml
@@ -145,7 +145,7 @@ def fetch_from_sirene_api(siren: str) -> Optional[Societe]:
 
         elif response.status_code == 403:
             print(f"⚠️  API SIRENE requiert une clé API (gratuite)")
-            print(f"   Pour l'obtenir: https://api.insee.fr/catalogue/")
+            print(f"   Pour l'obtenir: https://portail-api.insee.fr/")
             return None
 
         elif response.status_code == 404:
@@ -211,7 +211,7 @@ def scrape_pappers(identifier: str) -> Societe:
     print(f"\n❌ Impossible de récupérer les données automatiquement.")
     print(f"   Solutions:")
     print(f"   1. Utiliser un SIREN de test (901995308 ou 393525852)")
-    print(f"   2. Obtenir une clé API SIRENE gratuite: https://api.insee.fr/catalogue/")
+    print(f"   2. Obtenir une clé API SIRENE gratuite: https://portail-api.insee.fr/")
     print(f"   3. Saisir les données manuellement (si terminal interactif)")
 
     import sys
