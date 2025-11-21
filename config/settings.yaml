@@ -1,0 +1,16 @@
+# Configuration globale du générateur de contrats
+
+# Configuration Pappers API
+pappers:
+  api_key: ""
+  base_url: "https://api.pappers.fr/v2"
+
+# Paramètres par défaut
+defaults:
+  language: "fr"
+  output_format: "docx"
+
+# Chemins
+paths:
+  templates: "templates"
+  output: "output"

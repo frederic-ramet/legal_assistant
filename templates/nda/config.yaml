@@ -1,0 +1,54 @@
+# Configuration spécifique pour les NDA
+
+# Variables standard
+variables:
+  - name: "company_name"
+    required: true
+    description: "Nom de l'entreprise signataire"
+  - name: "company_siren"
+    required: true
+    description: "Numéro SIREN"
+  - name: "company_address"
+    required: true
+    description: "Adresse du siège social"
+  - name: "representative_name"
+    required: true
+    description: "Nom du représentant légal"
+  - name: "representative_title"
+    required: true
+    description: "Fonction du représentant"
+
+# Options de clauses
+clauses:
+  - id: "confidentiality_period"
+    name: "Durée de confidentialité"
+    options:
+      - "2 ans"
+      - "3 ans"
+      - "5 ans"
+    default: "3 ans"
+
+  - id: "scope"
+    name: "Portée de l'accord"
+    options:
+      - "unilatéral"
+      - "bilatéral"
+    default: "bilatéral"
+
+  - id: "jurisdiction"
+    name: "Juridiction compétente"
+    default: "Tribunaux de Paris"
+
+# Templates disponibles
+templates:
+  - name: "master"
+    file: "NDA_Master.docx"
+    description: "Template NDA standard"
+
+  - name: "dev_plateforme"
+    file: "NDA_DevPlateforme.docx"
+    description: "NDA pour développement de plateforme"
+
+  - name: "prestations"
+    file: "NDA_Prestations.docx"
+    description: "NDA pour prestations de service"
