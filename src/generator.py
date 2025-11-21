@@ -21,11 +21,44 @@ def load_template_config(template_name: str) -> Dict[str, Any]:
 
 
 def replace_in_paragraph(paragraph, old_text: str, new_text: str):
-    """Remplace du texte dans un paragraphe en préservant le formatage."""
-    if old_text in paragraph.text:
-        for run in paragraph.runs:
-            if old_text in run.text:
-                run.text = run.text.replace(old_text, new_text)
+    """
+    Remplace du texte dans un paragraphe en préservant le formatage.
+
+    Cette fonction gère le cas où le texte est fragmenté en plusieurs runs.
+    """
+    # Vérifier si le texte à remplacer est dans le paragraphe
+    if old_text not in paragraph.text:
+        return False
+
+    # Stratégie 1: Essayer le remplacement simple dans les runs
+    replaced = False
+    for run in paragraph.runs:
+        if old_text in run.text:
+            run.text = run.text.replace(old_text, new_text)
+            replaced = True
+
+    if replaced:
+        return True
+
+    # Stratégie 2: Le texte est fragmenté sur plusieurs runs
+    # On reconstruit tout le paragraphe
+    full_text = paragraph.text
+    if old_text in full_text:
+        new_full_text = full_text.replace(old_text, new_text)
+
+        # Supprimer tous les runs existants sauf le premier
+        for _ in range(len(paragraph.runs) - 1):
+            paragraph._element.remove(paragraph.runs[-1]._element)
+
+        # Mettre le nouveau texte dans le premier run
+        if paragraph.runs:
+            paragraph.runs[0].text = new_full_text
+        else:
+            paragraph.add_run(new_full_text)
+
+        return True
+
+    return False
 
 
 def replace_in_table(table, old_text: str, new_text: str):
@@ -91,26 +124,22 @@ def generate_nda(partie2: Societe, variant: str = "master", output_dir: str = "o
 
     if format_partie2 == 'detailed':
         # Format DETAILED (master)
-        # XXXXX, société par actions simplifiée unipersonnelle, dont le siège social
-        # est situé à XXXXX (France), au capital de XXXXX €, inscrit au registre du
-        # commerce de XXXXX sous le numéro d'inscription XXXXX, dûment représenté par XXXXX,
+        # Le template contient:
+        # "XXXXX , société par actions simplifiée unipersonnelle, dont le siège social
+        #  est situé à XXXXX (France), au capital de XXXXX €, inscrit au registre du
+        #  commerce de XXXXX sous le numéro d'inscription XXXXX , dûment représenté par XXXXX ,"
 
-        # On remplace de manière séquentielle pour éviter les collisions
+        # Note: Il y a un espace avant la virgule après le premier XXXXX dans le template
         replacements = {
-            f"{partie2.raison_sociale}, société par actions simplifiée unipersonnelle":
+            # Premier XXXXX (raison sociale) - avec espace avant la virgule
+            "XXXXX , société par actions simplifiée unipersonnelle":
                 f"{partie2.raison_sociale}, {partie2.forme_juridique.lower()}",
-        }
-
-        # Appliquer le premier remplacement
-        replace_in_document(doc, replacements)
-
-        # Puis les autres
-        replacements = {
-            f"situé à XXXXX (France)": f"situé à {partie2.adresse}",
-            f"capital de XXXXX €": f"capital de {partie2.capital}",
-            f"commerce de XXXXX sous": f"commerce de {partie2.ville_rcs} sous",
-            f"numéro d'inscription XXXXX": f"numéro d'inscription {partie2.siren}",
-            f"représenté par XXXXX,": f"représenté par {partie2.representant_nom},",
+            # Les autres XXXXX dans leur contexte
+            "situé à XXXXX (France)": f"situé à {partie2.adresse}",
+            "capital de XXXXX €": f"capital de {partie2.capital}",
+            "commerce de XXXXX sous": f"commerce de {partie2.ville_rcs} sous",
+            "numéro d'inscription XXXXX ": f"numéro d'inscription {partie2.siren} ",
+            "représenté par XXXXX ,": f"représenté par {partie2.representant_nom},",
         }
 
     else:
