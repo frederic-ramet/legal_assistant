@@ -1,0 +1,14 @@
+# Configuration du générateur de contrats
+
+# API SIRENE (INSEE)
+# Pour obtenir une clé API gratuite:
+#   1. Aller sur https://portail-api.insee.fr/
+#   2. Créer un compte et une application (mode "simple")
+#   3. Souscrire au plan "Public" de l'API Sirene
+#   4. Copier votre clé API ci-dessous
+#
+# IMPORTANT: Copiez ce fichier en settings.yaml et ajoutez votre clé
+#            cp config/settings.yaml.example config/settings.yaml
+
+api_sirene:
+  key: null  # Remplacer par votre clé API ou utiliser le menu interactif (option 4)

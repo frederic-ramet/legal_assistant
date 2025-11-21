@@ -94,15 +94,17 @@ show_main_menu() {
     echo "  1) Générer un NDA (Accord de confidentialité)"
     echo "  2) Afficher l'aide"
     echo "  3) Tester l'API SIRENE (requiert clé API)"
-    echo "  4) Quitter"
+    echo "  4) Configurer la clé API SIRENE"
+    echo "  5) Quitter"
     echo ""
-    read -p "Votre choix (1-4): " choice
+    read -p "Votre choix (1-5): " choice
 
     case $choice in
         1) generate_nda ;;
         2) show_help ;;
         3) test_scraper ;;
-        4) exit 0 ;;
+        4) configure_api_key ;;
+        5) exit 0 ;;
         *)
             print_error "Choix invalide"
             sleep 2
@@ -241,6 +243,79 @@ test_scraper() {
     echo ""
 
     python3 -m src.scraper
+
+    echo ""
+    read -p "Appuyez sur Entrée pour revenir au menu..."
+    show_main_menu
+}
+
+# Configurer la clé API
+configure_api_key() {
+    clear
+    print_header "CONFIGURATION CLÉ API SIRENE"
+
+    echo ""
+    print_info "Configuration de votre clé API SIRENE (INSEE)"
+    echo ""
+
+    # Vérifier si une clé existe déjà
+    if [ -f "config/settings.yaml" ]; then
+        current_key=$(grep -A 1 "api_sirene:" config/settings.yaml | grep "key:" | sed 's/.*key: *//' | tr -d ' ')
+        if [ -n "$current_key" ] && [ "$current_key" != "null" ]; then
+            print_info "Clé API actuelle: ${current_key:0:8}...${current_key: -8}"
+            echo ""
+            read -p "Voulez-vous la remplacer ? (o/n) " -n 1 -r
+            echo ""
+            if [[ ! $REPLY =~ ^[Oo]$ ]]; then
+                show_main_menu
+                return
+            fi
+        fi
+    fi
+
+    echo ""
+    echo "Pour obtenir une clé API gratuite:"
+    echo "  1. Allez sur https://portail-api.insee.fr/"
+    echo "  2. Créez un compte et une application (mode 'simple')"
+    echo "  3. Souscrivez au plan 'Public' de l'API Sirene"
+    echo "  4. Copiez votre clé API"
+    echo ""
+
+    read -p "Entrez votre clé API (ou Entrée pour annuler): " api_key
+
+    if [ -z "$api_key" ]; then
+        print_warning "Configuration annulée"
+        echo ""
+        read -p "Appuyez sur Entrée pour revenir au menu..."
+        show_main_menu
+        return
+    fi
+
+    # Créer le dossier config s'il n'existe pas
+    mkdir -p config
+
+    # Écrire dans le fichier settings.yaml
+    cat > config/settings.yaml << EOF
+# Configuration du générateur de contrats
+
+# API SIRENE (INSEE)
+# Pour obtenir une clé API gratuite:
+#   1. Aller sur https://portail-api.insee.fr/
+#   2. Créer un compte et une application (mode "simple")
+#   3. Souscrire au plan "Public" de l'API Sirene
+#   4. Copier la clé API ci-dessous
+
+api_sirene:
+  key: $api_key
+EOF
+
+    if [ $? -eq 0 ]; then
+        echo ""
+        print_success "Clé API sauvegardée dans config/settings.yaml"
+        print_info "Vous pouvez maintenant utiliser l'option 3 pour tester l'API"
+    else
+        print_error "Erreur lors de la sauvegarde de la clé"
+    fi
 
     echo ""
     read -p "Appuyez sur Entrée pour revenir au menu..."

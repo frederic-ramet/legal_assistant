@@ -1,8 +1,11 @@
 # Module pour récupérer les informations d'entreprise via API SIRENE (INSEE)
 
+import os
 import re
+import yaml
 import requests
 from typing import Optional
+from pathlib import Path
 from .models import Societe
 
 
@@ -30,6 +33,29 @@ def extract_siren_from_url(url: str) -> Optional[str]:
     if match:
         return match.group(1)
     return None
+
+
+def load_api_key() -> Optional[str]:
+    """Charge la clé API SIRENE depuis config/settings.yaml."""
+    config_path = Path(__file__).parent.parent / "config" / "settings.yaml"
+
+    if not config_path.exists():
+        return None
+
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+
+        api_key = config.get('api_sirene', {}).get('key')
+
+        # Vérifier que la clé n'est pas null ou vide
+        if api_key and api_key != 'null' and api_key.strip():
+            return api_key.strip()
+
+        return None
+    except Exception as e:
+        print(f"⚠️  Erreur lors du chargement de la config: {e}")
+        return None
 
 
 def get_test_data(siren: str) -> Optional[Societe]:
@@ -76,8 +102,8 @@ def fetch_from_sirene_api(siren: str) -> Optional[Societe]:
     Documentation: https://portail-api.insee.fr/ > API Sirene > Documentation
     État du service: https://www.sirene.fr/sirene/public/accueil
     """
-    # Vérifier si une clé API est configurée (future implémentation)
-    api_key = None  # TODO: Charger depuis config/settings.yaml
+    # Charger la clé API depuis config/settings.yaml
+    api_key = load_api_key()
 
     # URL correcte de l'API SIRENE v3.11
     url = f"https://api.insee.fr/api-sirene/3.11/siren/{siren}"

@@ -35,6 +35,9 @@ ENV/
 # Output
 output/*.docx
 
+# Configuration (contient la clé API)
+config/settings.yaml
+
 # OS
 .DS_Store
 Thumbs.db
