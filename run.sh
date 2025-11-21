@@ -68,8 +68,13 @@ check_dependencies() {
         echo ""
         if [[ $REPLY =~ ^[Oo]$ ]]; then
             print_info "Installation des dépendances..."
-            pip3 install -q -r requirements.txt
-            print_success "Dépendances installées avec succès"
+            pip3 install -r requirements.txt
+            if [ $? -eq 0 ]; then
+                print_success "Dépendances installées avec succès"
+            else
+                print_error "Erreur lors de l'installation des dépendances"
+                exit 1
+            fi
         else
             print_error "Installation annulée. Exécutez: pip3 install -r requirements.txt"
             exit 1

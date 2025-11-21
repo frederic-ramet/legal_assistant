@@ -141,7 +141,7 @@ def scrape_pappers(identifier: str) -> Societe:
         raise
 
     # Parser le HTML
-    soup = BeautifulSoup(response.content, 'lxml')
+    soup = BeautifulSoup(response.content, 'html.parser')
 
     # Extraire les données
     try:
